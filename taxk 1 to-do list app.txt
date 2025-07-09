@@ -1,0 +1,54 @@
+    import tkinter as tk
+from tkinter import messagebox, simpledialog
+import csv
+import os
+# Task class to hold task details
+class Task:
+    def __init__(self, title, description='', priority=1, due_date=''):
+        self.title = title
+        self.description = description
+        self.priority = priority
+        self.due_date = due_date
+        self.completed = False
+# App class to handle the logic and GUI
+class ToDoApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title('To-Do List App')
+        self.tasks = []
+        self.load_tasks()
+        self.create_widgets()
+    def create_widgets(self):
+        self.task_listbox = tk.Listbox(self.root, selectmode=tk.SINGLE, width=50)
+        self.task_listbox.pack(pady=20)
+        self.add_button = tk.Button(self.root, text='Add Task', command=self.add_task)
+        self.add_button.pack(pady=5)
+        self.edit_button = tk.Button(self.root, text='Edit Task', command=self.edit_task)
+        self.edit_button.pack(pady=5)
+def mark_completed(self):
+        try:
+            selected_task_index = self.task_listbox.curselection()[0]
+            self.tasks[selected_task_index].completed = not self.tasks[selected_task_index].completed
+            self.save_tasks()
+            self.refresh_task_list()
+        except IndexError:
+            messagebox.showwarning("Select Task", "Please select a task to mark as completed.")
+    def save_tasks(self):
+        with open('tasks.csv', mode='w', newline='') as file:
+            writer = csv.writer(file)
+            for task in self.tasks:
+                writer.writerow([task.title, task.description, task.priority, task.due_date, task.completed])
+    def load_tasks(self):
+        if os.path.exists('tasks.csv'):
+            with open('tasks.csv', mode='r') as file:
+                reader = csv.reader(file)
+                for row in reader:
+                    title, description, priority, due_date, completed = row
+                    task = Task(title, description, int(priority), due_date)
+                    task.completed = completed == 'True'
+                    self.tasks.append(task)
+# Run the app
+if __name__ == '__main__':
+    root = tk.Tk()
+    app = ToDoApp(root)
+    root.mainloop()
