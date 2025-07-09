@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Alarm Clock</title>
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4cc9f0;
+            --text-color: #333;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --danger-color: #f72585;
+            --success-color: #4caf50;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --alert-bg: rgba(253, 242, 248, 0.9);
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4cc9f0;
+            --text-color: #f8f9fa;
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --danger-color: #f72585;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --alert-bg: rgba(74, 20, 48, 0.9);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .clock-container {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .time {
+            font-size: 4rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .date {
+            font-size: 1.5rem;
+            opacity: 0.8;
+            margin-bottom: 1rem;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow);
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.secondary {
+            background-color: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+
+        button.secondary:hover {
+            background-color: rgba(67, 97, 238, 0.1);
+        }
+
+        button.danger {
+            background-color: var(--danger-color);
+        }
+
+        button.danger:hover {
+            background-color: #d11467;
+        }
+
+        button.success {
+            background-color: var(--success-color);
+        }
+
+        button.success:hover {
+            background-color: #3d8b40;
+        }
+
+        .form-container {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+            display: none;
+        }
+
+        .form-container.active {
+            display: block;
+        }
+
+        h2 {
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .alarms-list {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .alarm-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .alarm-item:last-child {
+            border-bottom: none;
+        }
+
+        .alarm-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .alarm-time {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .alarm-label {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        .alarm-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--success-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--danger-color);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0.5rem;
+        }
+
+        .alert-active {
+            background-color: var(--alert-bg);
+            border-left: 5px solid var(--danger-color);
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            animation: pulse 2s infinite;
+        }
+
+        .alert-active.active {
+            display: block;
+        }
+
+        .alert-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--danger-color);
+        }
+
+        .alert-time {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--text-color);
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: translateX(-50%) scale(1);
+            }
+            50% {
+                transform: translateX(-50%) scale(1.02);
+            }
+            100% {
+                transform: translateX(-50%) scale(1);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .time {
+                font-size: 3rem;
+            }
+            
+            .date {
+                font-size: 1.2rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .alarm-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .alarm-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Alarm Clock</h1>
+            <button class="theme-toggle" id="themeToggle">🌓</button>
+        </header>
+
+        <div class="clock-container">
+            <div class="time" id="currentTime">00:00:00</div>
+            <div class="date" id="currentDate">Monday, January 1, 2023</div>
+        </div>
+
+        <div class="form-container" id="alarmFormContainer">
+            <h2>Set New Alarm</h2>
+            <form id="alarmForm">
+                <div class="form-group">
+                    <label for="alarmTime">Alarm Time</label>
+                    <input type="time" id="alarmTime" required>
+                </div>
+                <div class="form-group">
+                    <label for="alarmLabel">Label (Optional)</label>
+                    <input type="text" id="alarmLabel" placeholder="Wake up, Workout, etc.">
+                </div>
+                <div class="form-group">
+                    <label for="alarmSound">Alarm Sound</label>
+                    <select id="alarmSound">
+                        <option value="beep">Beep</option>
+                        <option value="digital">Digital</option>
+                        <option value="bell">Bell</option>
+                        <option value="chime">Chime</option>
+                        <option value="buzzer">Buzzer</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="secondary" id="cancelAlarm">Cancel</button>
+                    <button type="submit">Set Alarm</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="controls">
+            <button id="newAlarmBtn">Set New Alarm</button>
+        </div>
+
+        <div class="alarms-list">
+            <h2>Your Alarms</h2>
+            <div id="alarmsContainer">
+                <div class="empty-state" id="noAlarmsMessage">
+                    No alarms set. Click "Set New Alarm" to create one.
+                </div>
+            </div>
+        </div>
+
+        <div class="alert-active" id="alarmAlert">
+            <div class="alert-title">ALARM</div>
+            <div class="alert-time" id="alarmAlertTime">08:00 AM</div>
+            <div class="alert-label" id="alarmAlertLabel">Wake up</div>
+            <div class="alert-actions">
+                <button class="secondary" id="snoozeBtn">Snooze (5 min)</button>
+                <button class="danger" id="dismissBtn">Dismiss</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="beepSound" src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3"></audio>
+    <audio id="digitalSound" src="https://assets.mixkit.co/sfx/preview/mixkit-digital-clock-digital-alarm-buzzer-992.mp3"></audio>
+    <audio id="bellSound" src="https://assets.mixkit.co/sfx/preview/mixkit-clock-chime-1115.mp3"></audio>
+    <audio id="chimeSound" src="https://assets.mixkit.co/sfx/preview/mixkit-melodic-alarm-clock-beep-1108.mp3"></audio>
+    <audio id="buzzerSound" src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-buzzer-1023.mp3"></audio>
+
+    <script>
+        // DOM Elements
+        const currentTimeElement = document.getElementById('currentTime');
+        const currentDateElement = document.getElementById('currentDate');
+        const alarmFormContainer = document.getElementById('alarmFormContainer');
+        const alarmForm = document.getElementById('alarmForm');
+        const newAlarmBtn = document.getElementById('newAlarmBtn');
+        const cancelAlarmBtn = document.getElementById('cancelAlarm');
+        const alarmsContainer = document.getElementById('alarmsContainer');
+        const noAlarmsMessage = document.getElementById('noAlarmsMessage');
+        const alarmAlert = document.getElementById('alarmAlert');
+        const alarmAlertTime = document.getElementById('alarmAlertTime');
+        const alarmAlertLabel = document.getElementById('alarmAlertLabel');
+        const snoozeBtn = document.getElementById('snoozeBtn');
+        const dismissBtn = document.getElementById('dismissBtn');
+        const themeToggle = document.getElementById('themeToggle');
+
+        // Audio elements
+        const beepSound = document.getElementById('beepSound');
+        const digitalSound = document.getElementById('digitalSound');
+        const bellSound = document.getElementById('bellSound');
+        const chimeSound = document.getElementById('chimeSound');
+        const buzzerSound = document.getElementById('buzzerSound');
+
+        // State
+        let alarms = JSON.parse(localStorage.getItem('alarms')) || [];
+        let activeAlarm = null;
+        let is24HourFormat = false;
+        let currentTheme = localStorage.getItem('theme') || 'light';
+
+        // Initialize
+        function init() {
+            updateClock();
+            setInterval(updateClock, 1000);
+            renderAlarms();
+            applyTheme();
+            
+            // Event listeners
+            newAlarmBtn.addEventListener('click', () => {
+                alarmFormContainer.classList.add('active');
+                document.getElementById('alarmTime').focus();
+            });
+            
+            cancelAlarmBtn.addEventListener('click', () => {
+                alarmFormContainer.classList.remove('active');
+                alarmForm.reset();
+            });
+            
+            alarmForm.addEventListener('submit', handleNewAlarm);
+            snoozeBtn.addEventListener('click', handleSnooze);
+            dismissBtn.addEventListener('click', handleDismiss);
+            themeToggle.addEventListener('click', toggleTheme);
+        }
+
+        // Clock functions
+        function updateClock() {
+            const now = new Date();
+            
+            // Update time
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            currentTimeElement.textContent = is24HourFormat 
+                ? `${hours}:${minutes}:${seconds}`
+                : formatAMPM(now);
+            
+            // Update date
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            currentDateElement.textContent = now.toLocaleDateString(undefined, options);
+            
+            // Check alarms
+            checkAlarms(now);
+        }
+        
+        function formatAMPM(date) {
+            let hours = date.getHours();
+            let minutes = date.getMinutes();
+            let seconds = date.getSeconds();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+            minutes = minutes < 10 ? '0'+minutes : minutes;
+            seconds = seconds < 10 ? '0'+seconds : seconds;
+            return `${hours}:${minutes}:${seconds} ${ampm}`;
+        }
+
+        // Alarm functions
+        function handleNewAlarm(e) {
+            e.preventDefault();
+            
+            const timeInput = document.getElementById('alarmTime').value;
+            const labelInput = document.getElementById('alarmLabel').value || 'Alarm';
+            const soundInput = document.getElementById('alarmSound').value;
+            
+            const [hours, minutes] = timeInput.split(':');
+            const alarmTime = new Date();
+            alarmTime.setHours(parseInt(hours, 10));
+            alarmTime.setMinutes(parseInt(minutes, 10));
+            alarmTime.setSeconds(0);
+            
+            const alarm = {
+                id: Date.now(),
+                time: alarmTime.getTime(),
+                label: labelInput,
+                sound: soundInput,
+                active: true
+            };
+            
+            alarms.push(alarm);
+            saveAlarms();
+            renderAlarms();
+            
+            alarmFormContainer.classList.remove('active');
+            alarmForm.reset();
+        }
+        
+        function renderAlarms() {
+            if (alarms.length === 0) {
+                noAlarmsMessage.style.display = 'block';
+                alarmsContainer.innerHTML = '';
+                return;
+            }
+            
+            noAlarmsMessage.style.display = 'none';
+            
+            alarmsContainer.innerHTML = alarms.map(alarm => {
+                const alarmDate = new Date(alarm.time);
+                const formattedTime = is24HourFormat 
+                    ? `${String(alarmDate.getHours()).padStart(2, '0')}:${String(alarmDate.getMinutes()).padStart(2, '0')}`
+                    : formatAlarmTime(alarmDate);
+                
+                return `
+                    <div class="alarm-item" data-id="${alarm.id}">
+                        <div class="alarm-info">
+                            <div class="alarm-time">${formattedTime}</div>
+                            <div class="alarm-label">${alarm.label} • ${alarm.sound}</div>
+                        </div>
+                        <div class="alarm-actions">
+                            <label class="toggle-switch">
+                                <input type="checkbox" ${alarm.active ? 'checked' : ''}>
+                                <span class="slider"></span>
+                            </label>
+                            <button class="delete-btn" data-id="${alarm.id}">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Add event listeners to new elements
+            document.querySelectorAll('.toggle-switch input').forEach(toggle => {
+                toggle.addEventListener('change', function() {
+                    const id = parseInt(this.closest('.alarm-item').dataset.id);
+                    toggleAlarm(id, this.checked);
+                });
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.dataset.id);
+                    deleteAlarm(id);
+                });
+            });
+        }
+        
+        function formatAlarmTime(date) {
+            let hours = date.getHours();
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            return `${hours}:${minutes} ${ampm}`;
+        }
+        
+        function saveAlarms() {
+            localStorage.setItem('alarms', JSON.stringify(alarms));
+        }
+        
+        function toggleAlarm(id, active) {
+            alarms = alarms.map(alarm => 
+                alarm.id === id ? { ...alarm, active } : alarm
+            );
+            saveAlarms();
+        }
+        
+        function deleteAlarm(id) {
+            alarms = alarms.filter(alarm => alarm.id !== id);
+            saveAlarms();
+            renderAlarms();
+        }
+        
+        function checkAlarms(now) {
+            const currentTime = new Date(now);
+            currentTime.setSeconds(0);
+            currentTime.setMilliseconds(0);
+            
+            const currentTimestamp = currentTime.getTime();
+            
+            alarms.forEach(alarm => {
+                if (alarm.active && alarm.time === currentTimestamp) {
+                    triggerAlarm(alarm);
+                }
+            });
+        }
+        
+        function triggerAlarm(alarm) {
+            activeAlarm = alarm;
+            
+            // Display alert
+            alarmAlertTime.textContent = formatAlarmTime(new Date(alarm.time));
+            alarmAlertLabel.textContent = alarm.label;
+            alarmAlert.classList.add('active');
+            
+            // Play sound
+            playAlarmSound(alarm.sound);
+        }
+        
+        function playAlarmSound(soundType) {
+            let sound;
+            switch(soundType) {
+                case 'beep':
+                    sound = beepSound;
+                    break;
+                case 'digital':
+                    sound = digitalSound;
+                    break;
+                case 'bell':
+                    sound = bellSound;
+                    break;
+                case 'chime':
+                    sound = chimeSound;
+                    break;
+                case 'buzzer':
+                    sound = buzzerSound;
+                    break;
+                default:
+                    sound = beepSound;
+            }
+            
+            sound.currentTime = 0;
+            sound.loop = true;
+            sound.play().catch(e => console.log('Audio playback failed:', e));
+        }
+        
+        function stopAlarmSound() {
+            beepSound.pause();
+            digitalSound.pause();
+            bellSound.pause();
+            chimeSound.pause();
+            buzzerSound.pause();
+        }
+        
+        function handleSnooze() {
+            const snoozeTime = new Date(activeAlarm.time);
+            snoozeTime.setMinutes(snoozeTime.getMinutes() + 5);
+            
+            alarms = alarms.filter(alarm => alarm.id !== activeAlarm.id);
+            alarms.push({
+                ...activeAlarm,
+                time: snoozeTime.getTime()
+            });
+            
+            saveAlarms();
+            renderAlarms();
+            handleDismiss();
+        }
+        
+        function handleDismiss() {
+            alarmAlert.classList.remove('active');
+            stopAlarmSound();
+            activeAlarm = null;
+        }
+
+        // Theme functions
+        function toggleTheme() {
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            localStorage.setItem('theme', currentTheme);
+            applyTheme();
+        }
+
+        function applyTheme() {
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            themeToggle.textContent = currentTheme === 'light' ? '🌙' : '☀️';
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
+
